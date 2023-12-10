@@ -74,70 +74,6 @@ def write_file_undirected(graph: dict, file_name: str):
             else:
                 file.write(f'{pair[0]},{pair[-1]}\n')
 
-def strong_coherence_oriented(graph: dict) -> list:
-    """Searches for strong coherence in oriendet graph
-    It uses Kosarag's algorithm
-
-    Args:
-        graph (dict): G - oriented graph
-
-    Returns:
-        list: strong coherence
-    """
-    #_______________________________________
-    def dfs(graph_dfs: dict, v: int, visited: dict, stack: list):
-        """Searches for dfs in graph
-
-        Args:
-            graph (dict): G - oriented graph
-            v (int): vertix
-            visited (dict): if visited true, else False
-            stack (list): list of stack
-        """
-        visited[v] = True
-        for i in graph_dfs[v]:
-            if not visited[i]:
-                dfs(graph_dfs, i, visited, stack)
-        stack.append(v)
-    #________________________________________
-    def transpose(graph_to_transpose):
-        """Function transposes graph
-
-        Args:
-            graph (dict): G - oriented graph
-
-        Returns:
-            dict: transposed graph
-        """
-        transposed_graph = {}
-        for key in graph_to_transpose.keys():
-            transposed_graph[key] = []
-        for i in graph_to_transpose:
-            for j in graph_to_transpose[i]:
-                transposed_graph[j].append(i)
-        return transposed_graph
-    #_________________________________________
-    vertices = list(graph.keys())
-    stack: list = []
-    visited = {}
-    for i in vertices:
-        visited[i] = False
-    for i in vertices:
-        if not visited[i]:
-            dfs(graph, i, visited, stack)
-    transposed_graph = transpose(graph)
-    visited = {}
-    for i in vertices:
-        visited[i] = False
-    result = []
-    while stack:
-        i = stack.pop()
-        if not visited[i]:
-            temp: list = []
-            dfs(transposed_graph, i, visited, temp)
-            result.append(temp)
-    return result
-
 def find_components(graph: dict[int, list[int]])->list:
     """
     >>> find_components({1: [2, 3], 2: [1, 3], 3: [1, 2], 4: [5], 5: [4], 6: [7], 7: [6]})
@@ -273,10 +209,74 @@ def find_components(graph: dict[int, list[int]])->list:
                 visited.append(i)
     return components
 
-"""This function finds all the connecting points of an undirected graph"""
-def find_con_points(graph):
+def strong_coherence_oriented(graph: dict) -> list:
+    """Searches for strong coherence in oriendet graph
+    It uses Kosarag's algorithm
+
+    Args:
+        graph (dict): G - oriented graph
+
+    Returns:
+        list: strong coherence
     """
-    finds all the connecting points of an undirected graph
+    #_______________________________________
+    def dfs(graph_dfs: dict, v: int, visited: dict, stack: list):
+        """Searches for dfs in graph
+
+        Args:
+            graph (dict): G - oriented graph
+            v (int): vertix
+            visited (dict): if visited true, else False
+            stack (list): list of stack
+        """
+        visited[v] = True
+        for i in graph_dfs[v]:
+            if not visited[i]:
+                dfs(graph_dfs, i, visited, stack)
+        stack.append(v)
+    #________________________________________
+    def transpose(graph_to_transpose):
+        """Function transposes graph
+
+        Args:
+            graph (dict): G - oriented graph
+
+        Returns:
+            dict: transposed graph
+        """
+        transposed_graph = {}
+        for key in graph_to_transpose.keys():
+            transposed_graph[key] = []
+        for i in graph_to_transpose:
+            for j in graph_to_transpose[i]:
+                transposed_graph[j].append(i)
+        return transposed_graph
+    #_________________________________________
+    vertices = list(graph.keys())
+    stack: list = []
+    visited = {}
+    for i in vertices:
+        visited[i] = False
+    for i in vertices:
+        if not visited[i]:
+            dfs(graph, i, visited, stack)
+    transposed_graph = transpose(graph)
+    visited = {}
+    for i in vertices:
+        visited[i] = False
+    result = []
+    while stack:
+        i = stack.pop()
+        if not visited[i]:
+            temp: list = []
+            dfs(transposed_graph, i, visited, temp)
+            result.append(temp)
+    return result
+ 
+def find_con_points(graph: dict):
+    """
+    This function finds all the connecting points of an undirected graph
+    
     >>> find_con_points({0: [1], 1: [0, 2, 3, 5], 2: [1, 3, 4, 5],\
  3: [1, 2, 4], 4: [2, 3, 5], 5: [2, 4, 1, 6], 6:[5]})
     [1, 5]
@@ -404,3 +404,53 @@ def find_con_points(graph):
             con_points.append(i)
         graph_copy=copy.deepcopy(graph)
     return con_points
+
+def search_for_bridges(graph:dict) -> list:
+    """
+   Find bridges - finds all bridges in an undirected graph (returns a list of edges,
+each edge is an ordered pair of points).
+    >>> search_for_bridges({1: [2, 3], 2: [1, 3], 3: [1, 2, 4], 4: [3, 5], \
+5: [4, 6], 6: [5, 7], 7: [6]})
+    [[3, 4], [4, 5], [5, 6], [6, 7]]
+    """
+    res = []
+    edges = []
+    for vertex in graph:
+        for neighbor in graph[vertex]:
+            if [neighbor, vertex] not in edges:
+                edges.append([vertex, neighbor])
+    min_vertex = min(graph)
+    max_vertex = max(graph)
+    edges_copy = copy.deepcopy(edges)
+    for val in edges:
+        edges_copy.remove(val)
+        if not find_path(len(graph)+1, edges_copy, min_vertex, max_vertex):
+            res.append(val)
+        edges_copy.append(val)
+    return res
+
+def find_path(n: int, edges: list, source: int, destination: int) -> bool:
+    """
+    here is another way of representing a graph:
+    edges - is a list of edges of a graph,
+    where each edge is also a list of two integers,
+    which represent 2 adjacent vertices
+    find if there is a way from the source vertex to the destination one
+    >>> find_path(9, [[1, 2], [3, 4], [5, 6], [7, 8], [2, 4], [3, 5], [4, 5]], 1, 5)
+    True
+    >>> find_path(9, [[1, 2], [3, 4], [5, 6], [7, 8], [2, 2], [3, 5], [4, 5]], 1, 5)
+    False
+    """
+    graph = {i: [] for i in range(n)}
+    for edge in edges:
+        graph[edge[0]].append(edge[1])
+        graph[edge[1]].append(edge[0])
+    visited = [False] * n
+
+    def neighbor_search(vertex):
+        if vertex == destination:
+            return True
+        visited[vertex] = True
+        return any(neighbor_search(neighbor) for neighbor in graph[vertex] if not visited[neighbor])
+
+    return neighbor_search(source)
