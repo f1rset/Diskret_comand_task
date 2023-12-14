@@ -209,7 +209,7 @@ def find_components(graph: dict[int, list[int]])->list:
                 visited.append(i)
     return components
 
-def strong_coherence_oriented(graph: dict) -> list:
+def strong_connectivity(graph: dict) -> list:
     """Searches for strong coherence in oriendet graph
     It uses Kosarag's algorithm
 
@@ -218,6 +218,13 @@ def strong_coherence_oriented(graph: dict) -> list:
 
     Returns:
         list: strong coherence
+    Finds the components of the strong connectivity
+    of an oriented graph and returns a list of them.
+    l>>> strong_connectivity({0: [1, 2], 1: [2], 2: [0, 1], 3: [4], 4: [3, 5], 6: [7], 7: [6]})
+    'Graph contains 3 strong connectivity components:'
+    [{0: [1, 2], 1: [2], 2: [0, 1]}, {6: [7], 7: [6]}]
+    >>> strong_connectivity({0: [1, 2], 1: [2], 2: [3], 3: [], 4: [3], 5: [4]})
+    Graph doesn`t contain any strong connectivity components.
     """
     #_______________________________________
     def dfs(graph_dfs: dict, v: int, visited: dict, stack: list):
@@ -231,7 +238,7 @@ def strong_coherence_oriented(graph: dict) -> list:
         """
         visited[v] = True
         for i in graph_dfs[v]:
-            if not visited[i]:
+            if not visited[i] and i in graph_dfs:
                 dfs(graph_dfs, i, visited, stack)
         stack.append(v)
     #________________________________________
@@ -245,34 +252,52 @@ def strong_coherence_oriented(graph: dict) -> list:
             dict: transposed graph
         """
         transposed_graph = {}
-        for key in graph_to_transpose.keys():
+        for key in vertices:
             transposed_graph[key] = []
         for i in graph_to_transpose:
             for j in graph_to_transpose[i]:
                 transposed_graph[j].append(i)
         return transposed_graph
+    
+    def dfs_scc(reversed_graph, node, visited, component):
+        visited[node] = True
+        component.append(node)
+        for neighbor in reversed_graph[node]:
+            if not visited[neighbor] and neighbor in reversed_graph:
+                dfs_scc(reversed_graph, neighbor, visited, component)
     #_________________________________________
-    vertices = list(graph.keys())
+    vertices = set()
+    for i in graph:
+        for j in graph[i]:
+            vertices.add(i)
+            vertices.add(j)
     stack: list = []
     visited = {}
     for i in vertices:
         visited[i] = False
     for i in vertices:
-        if not visited[i]:
+        if not visited[i] and i in graph:
             dfs(graph, i, visited, stack)
     transposed_graph = transpose(graph)
     visited = {}
     for i in vertices:
         visited[i] = False
-    result = []
+    strongly_connected_components = []
     while stack:
-        i = stack.pop()
-        if not visited[i]:
-            temp: list = []
-            dfs(transposed_graph, i, visited, temp)
-            result.append(temp)
-    return result
- 
+        node = stack.pop(-1)
+        if not visited[node] and node in transposed_graph:
+            component: list = []
+            dfs_scc(transposed_graph, node, visited, component)
+            strongly_connected_components.append(dict(zip(component, [graph[node] for node in component])))
+    for i in strongly_connected_components.copy():
+        if len(i) < 2:
+            strongly_connected_components.remove(i)
+    if len(strongly_connected_components) == 0:
+        print('Graph doesn`t contain any strong connectivity components.')
+        return None
+    print(f'Graph contains {len(strongly_connected_components)} strong connectivity components:')
+    return strongly_connected_components
+
 def find_con_points(graph: dict):
     """
     This function finds all the connecting points of an undirected graph
