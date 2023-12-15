@@ -1,6 +1,8 @@
 import copy
+"""This function finds connected components in an undirected graph."""
 def find_components(graph: dict[int, list[int]])->list:
     """
+    Finds connected components in an undirected graph.
     >>> find_components({1: [2, 3], 2: [1, 3], 3: [1, 2], 4: [5], 5: [4], 6: [7], 7: [6]})
     [1, 4, 6]
     >>> find_components({1: [2, 3], 2: [1, 3], 3: [1, 2], 4: [5], 5: [4]})
