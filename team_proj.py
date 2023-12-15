@@ -684,12 +684,12 @@ def find_con_points(graph: dict):
     """
     def dfs_mod(graph: dict[int, list[int]], source: int, destination: int) -> bool:
         result = []
-        def ggg(current):
+        def check_path(current):
             if current not in result:
                 result.append(current)
                 for neighbour in graph[current]:
-                    ggg(neighbour)
-        ggg(source)
+                    check_path(neighbour)
+        check_path(source)
         return destination in result
     con_points=[]
     graph_copy=copy.deepcopy(graph)
